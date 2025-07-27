@@ -10,8 +10,9 @@ export const register = async (req: Request, res: Response) => {
     const user = await prisma.user.create({
       data: { email, password: hashedPassword },
     });
-    res.status(201).json({ message: 'User created', user });
+    res.status(201).json({ message: 'User created', user: { id: user.id, email: user.email } });
   } catch (err) {
+    console.error('Registration error:', err);
     res.status(500).json({ error: 'Email already exists or internal error' });
   }
 };
@@ -26,6 +27,7 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
     res.status(200).json({ token });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Something went wrong' });
   }
 };

@@ -20,7 +20,15 @@ if (!process.env.DATABASE_URL) {
 }
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // For your local frontend development
+    'http://localhost:3000', // If you use CRA or another local dev server
+    'https://seo-suggestion-frontend.onrender.com' // <--- YOUR DEPLOYED FRONTEND URL HERE
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed HTTP methods
+  credentials: true // Allow cookies to be sent (if you ever use them, good to include)
+}));
 app.use(express.json());
 
 app.use('/auth', authRoutes);

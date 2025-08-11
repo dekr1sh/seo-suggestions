@@ -1,17 +1,15 @@
-import OpenAI from 'openai'; 
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY as string; 
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY as string;
 
-const openai = new OpenAI({ 
-  apiKey: OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 // Define a simple interface for the expected AI suggestion structure
 interface AISuggestions {
   overallAssessment: string;
   missingTags: string[];
   improvementSuggestions: { tag: string; suggestion: string }[];
-  [key: string]: any; // This tells TypeScript it can have any string key with any value
+  [key: string]: any; 
 }
 
 export const getAiSuggestions = async (extractedTags: Record<string, any>): Promise<AISuggestions> => {
@@ -35,26 +33,26 @@ export const getAiSuggestions = async (extractedTags: Record<string, any>): Prom
   `;
 
   try {
-    const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o", 
-      messages: [
-        { role: "system", content: "You are an expert SEO analyst providing structured recommendations." },
-        { role: "user", content: prompt }
-      ],
-      response_format: { type: "json_object" }, // Request JSON output directly from OpenAI
-      temperature: 0.7, // Adjust creativity (0.0-1.0)
-      max_tokens: 1000, // Limit response length
-    });
-
-    // OpenAI's SDK typically returns content in choices[0].message.content
-    const jsonString = chatCompletion.choices[0].message.content;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }); 
+    const result = await model.generateContent(prompt);
+    
+    let jsonString = result.response.text();
 
     if (!jsonString) {
-        throw new Error('OpenAI response content was empty.');
+      throw new Error('Gemini API response content was empty.');
     }
 
+    // Gemini often wraps JSON in a markdown code block (```json...```).
+        // This regex will check for and remove that wrapper.
+        const jsonWrapperRegex = /```json\n([\s\S]*?)\n```/;
+        const match = jsonWrapperRegex.exec(jsonString);
+
+        if (match && match[1]) {
+            jsonString = match[1]; // Use the content inside the code block
+        }
+
     try {
-      const parsedSuggestions: AISuggestions = JSON.parse(jsonString); // Made `const` as it's not reassigned
+      const parsedSuggestions: AISuggestions = JSON.parse(jsonString);
       return parsedSuggestions;
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', jsonString, parseError);
@@ -62,7 +60,7 @@ export const getAiSuggestions = async (extractedTags: Record<string, any>): Prom
     }
 
   } catch (error) {
-    console.error('Error calling OpenAI API:', error);
+    console.error('Error calling Gemini API:', error);
     throw new Error(`Failed to get AI suggestions: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };

@@ -1,6 +1,6 @@
 import { Response } from 'express'; 
 import { AuthRequest } from '../middleware/auth';
-import { getAiSuggestions } from '../services/openaiService';
+import { getAiSuggestions } from '../services/aiService';
 import prisma from '../prismaClient';
 
 export const getRecommendations = async (req: AuthRequest, res: Response) => { 

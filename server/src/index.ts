@@ -10,7 +10,7 @@ if (!process.env.JWT_SECRET) {
   console.error('FATAL ERROR: JWT_SECRET environment variable is not defined. Exiting.');
   process.exit(1);
 }
-if (!process.env.OPENAI_API_KEY) {
+if (!process.env.GEMINI_API_KEY) {
   console.error('FATAL ERROR: OPENAI_API_KEY environment variable is not defined. Exiting.');
   process.exit(1);
 }
